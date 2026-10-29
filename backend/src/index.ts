@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { types } from 'pg';
 import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -18,8 +17,10 @@ import { technicalAnalysisService } from '@/services/technicalAnalysisService';
 dotenv.config();
 
 // Return NUMERIC and BIGINT columns as numbers so the frontend can format them
-types.setTypeParser(1700, (v) => parseFloat(v));
-types.setTypeParser(20, (v) => parseInt(v, 10));
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { types } = require('pg');
+types.setTypeParser(1700, (v: string) => parseFloat(v));
+types.setTypeParser(20, (v: string) => parseInt(v, 10));
 
 const app: Express = express();
 const httpServer = createServer(app);
