@@ -1,0 +1,160 @@
+.scanner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.scanner-header {
+  margin-bottom: 2rem;
+}
+
+.scanner-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.scanner-header p {
+  color: var(--text-secondary);
+}
+
+.scanner-controls {
+  margin-bottom: 2rem;
+}
+
+.scan-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-scan {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-scan:hover {
+  border-color: var(--accent);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.btn-scan.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.results-section {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.results-table {
+  overflow-x: auto;
+}
+
+.results-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table thead {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-bottom: 1px solid var(--border);
+}
+
+.results-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+.results-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.result-row:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.rsi {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+}
+
+.rsi.overbought {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.rsi.oversold {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .scanner {
+    padding: 1rem;
+  }
+
+  .scan-buttons {
+    flex-direction: column;
+  }
+
+  .btn-scan {
+    width: 100%;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
