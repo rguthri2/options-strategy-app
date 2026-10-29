@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Navbar from '@/components/Navbar';
-import Dashboard from '@/pages/Dashboard';
-import StockDetail from '@/pages/StockDetail';
-import Scanner from '@/pages/Scanner';
-import Portfolio from '@/pages/Portfolio';
+import Navbar from './components/Navbar';
+import Dashboard from './pages/Dashboard';
+import StockDetail from './pages/StockDetail';
+import Scanner from './pages/Scanner';
+import Portfolio from './pages/Portfolio';
 
 function App() {
   return (
