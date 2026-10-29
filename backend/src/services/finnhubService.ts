@@ -100,7 +100,7 @@ class FinnhubService {
 
       stock.price = quote.c;
       stock.previous_close = quote.pc;
-      stock.volume = quote.v;
+      stock.volume = quote.v ?? 0;
       stock.week_52_high = quote.h52w;
       stock.week_52_low = quote.l52w;
 
@@ -115,7 +115,7 @@ class FinnhubService {
       price.high = quote.h;
       price.low = quote.l;
       price.close = quote.c;
-      price.volume = quote.v;
+      price.volume = quote.v ?? 0;
       price.interval = '1d';
 
       await priceRepository.save(price);
