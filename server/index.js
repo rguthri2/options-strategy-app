@@ -105,7 +105,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, config.host, () => {
-  console.log(`Options Trader on http://${config.host}:${config.port}${config.basePath}/  (auth ${authEnabled() ? 'on' : 'OFF - run npm run set-password'})`);
+  console.log(`Options Strategy on http://${config.host}:${config.port}${config.basePath}/  (auth ${authEnabled() ? 'on' : 'OFF - run npm run set-password'})`);
 });
 
 // ----- background scanning -----

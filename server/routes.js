@@ -193,7 +193,7 @@ export function apiRouter() {
 
   r.get('/telegram', wrap(() => telegramStatus()));
   r.post('/telegram/test', wrap(async () => {
-    await sendTelegram('✅ <b>RG Options Trader</b> is connected. Position alerts and A+ setups will arrive here.');
+    await sendTelegram('✅ <b>Options Strategy</b> is connected. Position alerts and A+ setups will arrive here.');
     return { ok: true };
   }));
   r.post('/telegram/detect', wrap(async () => {

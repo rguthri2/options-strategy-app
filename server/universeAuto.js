@@ -8,7 +8,7 @@ import { runLow } from './priority.js';
 import { DEFAULT_UNIVERSE } from './universe.js';
 
 const FILE = 'universe-auto.json';
-const UA = { 'User-Agent': 'Mozilla/5.0 (RG Options Trader)' };
+const UA = { 'User-Agent': 'Mozilla/5.0 (Options Strategy)' };
 // Always kept for market-regime context even when ETFs are excluded.
 export const REGIME_ETFS = ['SPY', 'QQQ', 'IWM', 'DIA', 'XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLY', 'XLP', 'XLU', 'XLB', 'XLRE', 'XLC', 'SMH'];
 const JUNK = /warrant|\bunits?\b|\bright(s)?\b|preferred|depositary shares? represent|notes due|debenture|% (senior|notes|fixed)|trust preferred|acquisition corp/i;

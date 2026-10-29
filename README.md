@@ -1,4 +1,4 @@
-# RG Options Trader
+# Options Strategy
 
 A private options-trading workstation in the style of Google Finance, built for swing traders who trade options.
 It covers idea generation through position management:
