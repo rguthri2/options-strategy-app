@@ -28,7 +28,7 @@ const Portfolio: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/portfolio/${userId}`
+        `/api/portfolio/${userId}`
       );
       setPositions(response.data);
     } catch (error) {

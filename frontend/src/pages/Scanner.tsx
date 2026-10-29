@@ -30,7 +30,7 @@ const Scanner: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/indicators/scan/${type}`
+        `/api/indicators/scan/${type}`
       );
       setResults(response.data);
     } catch (error) {

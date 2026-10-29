@@ -7,7 +7,7 @@
 # Usage: bash vps-deploy-almalinux.sh
 # 
 # Installs:
-# - Node.js 18+
+# - Node.js 20
 # - PostgreSQL 15
 # - Redis
 # - Nginx
@@ -42,14 +42,18 @@ yum update -y
 echo -e "${GREEN}✅ System updated${NC}"
 
 # Step 2: Install Node.js 18
-echo -e "\n${YELLOW}📦 Step 2: Installing Node.js 18+...${NC}"
-curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+echo -e "\n${YELLOW}📦 Step 2: Installing Node.js 20...${NC}"
+yum install -y epel-release
+curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
 yum install -y nodejs
 NODE_VERSION=$(node --version)
 echo -e "${GREEN}✅ Node.js installed: $NODE_VERSION${NC}"
 
 # Step 3: Install PostgreSQL 15
 echo -e "\n${YELLOW}📦 Step 3: Installing PostgreSQL 15...${NC}"
+EL_VERSION=$(rpm -E %rhel)
+yum install -y "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${EL_VERSION}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+yum -qy module disable postgresql || true
 yum install -y postgresql15-server postgresql15-contrib
 /usr/pgsql-15/bin/postgresql-15-setup initdb
 systemctl start postgresql-15
@@ -81,7 +85,7 @@ echo -e "${GREEN}✅ Certbot installed${NC}"
 # Step 7: Install Build Essentials
 echo -e "\n${YELLOW}📦 Step 7: Installing build tools...${NC}"
 yum groupinstall -y "Development Tools"
-yum install -y gcc g++ make python3-devel
+yum install -y gcc gcc-c++ make python3-devel
 echo -e "${GREEN}✅ Build tools installed${NC}"
 
 # Step 8: Install PM2 globally
@@ -127,8 +131,8 @@ echo -e "\n${YELLOW}📋 Next Steps:${NC}"
 echo "1. Create database:"
 echo "   sudo -u postgres /usr/pgsql-15/bin/psql"
 echo ""
-echo "2. Then run these SQL commands:"
-echo "   CREATE USER trading_user WITH PASSWORD 'trading_password_123';"
+echo "2. Then run these SQL commands (choose your own strong password):"
+echo "   CREATE USER trading_user WITH PASSWORD '<strong-password>';"
 echo "   CREATE DATABASE trading_platform OWNER trading_user;"
 echo "   ALTER ROLE trading_user CREATEDB;"
 echo "   \\q"

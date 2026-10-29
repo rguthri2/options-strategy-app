@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
   const fetchStocks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/stocks');
+      const response = await axios.get('/api/stocks');
       setStocks(response.data);
     } catch (error) {
       console.error('Failed to fetch stocks:', error);

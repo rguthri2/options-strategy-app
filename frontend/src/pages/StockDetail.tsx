@@ -51,7 +51,7 @@ const StockDetail: React.FC = () => {
 
   const fetchChartData = async (sym: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/prices/${sym}/candles`);
+      const response = await axios.get(`/api/prices/${sym}/candles`);
       setCandles(response.data);
     } catch (error) {
       console.error('Failed to fetch candles:', error);
@@ -60,7 +60,7 @@ const StockDetail: React.FC = () => {
 
   const fetchIndicators = async (sym: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/indicators/${sym}`);
+      const response = await axios.get(`/api/indicators/${sym}`);
       setIndicators(response.data);
       setLoading(false);
     } catch (error) {
