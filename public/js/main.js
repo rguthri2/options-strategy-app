@@ -3,6 +3,7 @@ import { $, $$, esc, logo, fmt, cls, spark, toast } from './ui.js';
 
 const ROUTES = [
   [/^\/?$/, 'home', () => import('./views/home.js')],
+  [/^\/screen$/, 'screen', () => import('./views/screen.js')],
   [/^\/hotlist$/, 'hotlist', () => import('./views/hotlist.js')],
   [/^\/scanner$/, 'scanner', () => import('./views/scanner.js')],
   [/^\/plays$/, 'plays', () => import('./views/plays.js')],

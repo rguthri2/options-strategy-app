@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { esc, logo, fmt, cls, biasPill, loading, errorBox, toast, prefs } from '../ui.js';
-import { priceChart } from '../charts.js';
+import { priceChart, payoffChart } from '../charts.js';
+import { analyze, curve, firstExpiryMs } from '../../shared/strategy.js';
 import { ideaCard, bindIdeaActions } from './ideas.js';
 
 const RANGES = ['1D', '5D', '1M', '6M', 'YTD', '1Y', '5Y'];
@@ -18,10 +19,14 @@ export async function render(root, [symbol]) {
             <span class="spacer"></span><div class="legend" id="legend"></div></div>
           <div class="chart-box" id="chart"></div>
         </section>
+        <section class="card"><div class="card-h"><h2>Technical analysis</h2><span id="ta-pill"></span></div><div id="ta">${loading()}</div></section>
         <section class="card"><div class="card-h"><h2>Swing setup</h2><span id="setup-pill"></span></div><div id="setup">${loading()}</div></section>
-        <section><div class="card-h"><h2>Best option trades for ${esc(symbol)}</h2><span class="muted small">Every enabled strategy, scored against the current setup and IV regime</span></div><div id="ideas" class="ideas-grid">${loading('Scanning option chain…')}</div></section>
+        <section><div class="card-h"><h2>Strategy recommender</h2><div class="ranges" id="biasf"><button data-b="auto" class="on">Match chart</button><button data-b="bull">Bullish</button><button data-b="bear">Bearish</button><button data-b="neutral">Neutral</button></div></div>
+          <div class="card" id="plcard" hidden><div class="card-h"><h2 id="pltitle"></h2><span class="muted small" id="plsub"></span></div><div class="chart-box" id="plchart"></div></div>
+          <div id="ideas" class="ideas-grid">${loading('Scanning option chain…')}</div></section>
       </div>
       <aside class="stack">
+        <section class="card"><div class="card-h"><h2>Alerts</h2><span class="muted small">Telegram</span></div><div id="alerts"></div></section>
         <section class="card"><div class="card-h"><h2>Key stats</h2></div><div id="stats">${loading()}</div></section>
         <section class="card"><div class="card-h"><h2>Volatility</h2></div><div id="vol">${loading()}</div></section>
         <section class="card"><div class="card-h"><h2>Trend template</h2><span id="tt-score" class="muted"></span></div><div id="tt">${loading()}</div></section>
@@ -63,10 +68,12 @@ export async function render(root, [symbol]) {
         return;
       }
       const plan = data?.tech?.hotlist?.plan;
+      const dn = getComputedStyle(document.documentElement).getPropertyValue('--down').trim(), upc = getComputedStyle(document.documentElement).getPropertyValue('--up').trim();
+      const taLv = !intraday && ta ? [ta.support && { price: ta.support.price, title: 'Support', color: upc }, ta.resistance && { price: ta.resistance.price, title: 'Resistance', color: dn }].filter(Boolean) : [];
       const levels = !intraday && plan ? [
         { price: plan.stop, title: 'Stop', color: getComputedStyle(document.documentElement).getPropertyValue('--down').trim() },
         { price: plan.target1, title: '2R', color: getComputedStyle(document.documentElement).getPropertyValue('--up').trim() },
-      ] : [];
+      ].concat(taLv) : taLv;
       chart?.remove?.();
       chart = await priceChart($('#chart'), candles, { intraday, prevClose: range === '1D' ? data?.quote?.prevClose : undefined, smas: range === '5Y' ? [50] : [21, 50, 200], levels });
       $('#legend').innerHTML = intraday ? '' : '<span><i style="background:var(--accent)"></i>21 SMA</span><span><i style="background:var(--warn)"></i>50 SMA</span><span><i style="background:var(--neutral)"></i>200 SMA</span>';
@@ -124,17 +131,71 @@ export async function render(root, [symbol]) {
     } catch (e) { $('#canslim').innerHTML = errorBox(e); }
   };
 
+  const loadAlerts = async () => {
+    const d = await api.get('alerts').catch(() => ({ kinds: {}, alerts: [] }));
+    const mine = d.alerts.filter(a => a.symbol === symbol);
+    $('#alerts').innerHTML = `<form id="alertf" class="row" style="gap:6px;flex-wrap:wrap"><select name="kind">${Object.entries(d.kinds).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select>
+      <input name="value" type="number" step="any" required style="width:90px" placeholder="value"><button class="btn sm primary">Add</button></form>
+      <ul class="checklist" style="margin-top:8px">${mine.map(a => `<li class="${a.triggered ? 'ok' : ''}">${esc(d.kinds[a.kind])} ${a.value}${a.triggered ? ' - triggered' : ''} <a href="#" data-del="${a.id}">remove</a></li>`).join('') || '<li class="muted">No alerts for this symbol.</li>'}</ul>`;
+    $('#alertf').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      try { await api.post('alerts', { symbol, kind: f.get('kind'), value: f.get('value') }); loadAlerts(); } catch (err) { toast(err.message, true); }
+    });
+    $('#alerts').querySelectorAll('[data-del]').forEach(x => x.addEventListener('click', async e => { e.preventDefault(); await api.del(`alerts/${x.dataset.del}`); loadAlerts(); }));
+  };
+
+  let ta = null, allIdeas = [], biasSel = 'auto';
+  const loadTA = async () => {
+    try {
+      ta = await api.get(`ta/${encodeURIComponent(symbol)}`);
+      $('#ta-pill').innerHTML = biasPill(ta.bias);
+      const lvl = l => l ? `${fmt.px(l.price)} <span class="muted small">(${l.touches} touches)</span>` : '—';
+      $('#ta').innerHTML = `<p style="margin:0 0 10px"><b>${esc(ta.summary)}</b></p>
+        <div class="grid g3"><div class="kv"><div>Support</div><div>${lvl(ta.support)}</div><div>Resistance</div><div>${lvl(ta.resistance)}</div><div>Trend</div><div>${esc(ta.trend || '—')}</div></div>
+        <div class="kv"><div>RSI 14</div><div>${ta.metrics.rsi}</div><div>ADX 14</div><div>${ta.metrics.adx}</div><div>MACD hist</div><div class="${ta.metrics.macdHist >= 0 ? 'up' : 'down'}">${ta.metrics.macdHist}</div></div>
+        <div class="kv"><div>50 SMA</div><div>${fmt.px(ta.metrics.sma50)}</div><div>200 SMA</div><div>${ta.metrics.sma200 ? fmt.px(ta.metrics.sma200) : '—'}</div><div>ATR 14</div><div>${fmt.px(ta.atr)}</div></div></div>
+        <ul class="checklist" style="margin-top:10px">${ta.signals.map(s => `<li class="${s.vote > 0 ? 'ok' : ''}"><b>${esc(s.name)}:</b> ${esc(s.text)}</li>`).join('')}</ul>
+        ${ta.patterns.length ? `<div class="small" style="margin-top:8px"><b>Patterns:</b> ${ta.patterns.map(p => `${esc(p.name)} ${biasPill(p.bias)}`).join(' · ')}</div>` : ''}`;
+      drawChart();
+      showIdeas();
+    } catch (e) { $('#ta').innerHTML = errorBox(e); }
+  };
+
+  const showPL = idea => {
+    const legs = idea.legs, optLegs = legs.filter(l => l.type !== 'stock');
+    const sigma = optLegs.length ? optLegs.reduce((s, l) => s + (l.iv || 0.3), 0) / optLegs.length : 0.3;
+    const hMs = firstExpiryMs(legs), rate = 0.04;
+    const a = analyze(legs, { spot: idea.spot, sigma, r: rate });
+    const T = Math.max((hMs - Date.now()) / (365 * 86400000), 1 / 365), sd = idea.spot * sigma * Math.sqrt(T);
+    const ks = optLegs.map(l => l.strike);
+    const lo = Math.max(0.01, Math.min(idea.spot - 2.6 * sd, ...ks.map(k => k * 0.95))), hi = Math.max(idea.spot + 2.6 * sd, ...ks.map(k => k * 1.05));
+    const pts = curve(legs, { lo, hi, n: 220, r: rate, horizonMs: hMs, atMs: Date.now(), ivShift: 0 });
+    $('#plcard').hidden = false;
+    $('#pltitle').textContent = `${idea.label} · ${idea.dte} DTE`;
+    $('#plsub').textContent = `Max profit ${fmt.usd(idea.maxProfit)} · Max loss ${fmt.usd(idea.maxLoss)}`;
+    payoffChart($('#plchart'), pts, { spot: idea.spot, breakevens: a.breakevens, sd1: [idea.spot - sd, idea.spot + sd], sd2: [idea.spot - 2 * sd, idea.spot + 2 * sd] });
+  };
+
+  const showIdeas = () => {
+    const want = biasSel === 'auto' ? (ta?.bias || null) : biasSel;
+    const list = want ? allIdeas.filter(i => i.bias === want) : allIdeas;
+    const shown = list.length ? list : allIdeas;
+    $('#ideas').innerHTML = shown.length ? shown.map(ideaCard).join('') : '<div class="card empty">No option candidates for this symbol.</div>';
+    if (shown.length) showPL(shown[0]);
+  };
+
   const loadIdeas = async () => {
     try {
-      const ideas = await api.get(`ideas/${encodeURIComponent(symbol)}`);
-      $('#ideas').innerHTML = ideas.length ? ideas.map(ideaCard).join('') : '<div class="card empty">No option candidates for this symbol.</div>';
-      bindIdeaActions($('#ideas'), ideas);
+      allIdeas = await api.get(`ideas/${encodeURIComponent(symbol)}`);
+      bindIdeaActions($('#ideas'), allIdeas);
+      showIdeas();
     } catch (e) { $('#ideas').innerHTML = errorBox(e); }
   };
 
   try {
     data = await api.get(`symbol/${encodeURIComponent(symbol)}`);
-    drawHead(data.quote); drawSide(); drawChart(); loadIdeas(); loadCanslim();
+    drawHead(data.quote); drawSide(); loadIdeas(); loadTA(); loadCanslim(); loadAlerts();
   } catch (e) { $('#head').innerHTML = errorBox(e); return; }
 
   $('#ranges').addEventListener('click', e => {
@@ -142,6 +203,17 @@ export async function render(root, [symbol]) {
     range = b.dataset.r; prefs.set('range', range);
     root.querySelectorAll('#ranges button').forEach(x => x.classList.toggle('on', x === b));
     drawHead(data.quote); drawChart();
+  });
+
+  $('#biasf').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    biasSel = b.dataset.b;
+    root.querySelectorAll('#biasf button').forEach(x => x.classList.toggle('on', x === b));
+    showIdeas();
+  });
+  $('#ideas').addEventListener('click', e => {
+    const card = e.target.closest('.idea'); if (!card || e.target.closest('button,a')) return;
+    const idea = allIdeas.find(x => x.id === card.dataset.id); if (idea) showPL(idea);
   });
 
   const t = setInterval(async () => {

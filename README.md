@@ -56,3 +56,9 @@ shared/            Pricing & analytics used by both server and browser (Black-Sc
 public/            Single-page UI (vanilla ES modules, no build step) + TradingView Lightweight Charts
 data/              Runtime state: settings, positions, OAuth tokens, IV history (gitignored)
 ```
+
+## Added features
+
+- **Symbol workspace** (#/t/SYMBOL): chart with support/resistance, plain-language technical analysis verdict (trend, RSI, MACD, ADX, patterns), strategy recommender (filter by bias, P/L chart), and price/RSI alerts.
+- **Screener** (#/screen): Trend, Downtrend, Breakout, Breakdown, Reversal, Pullback, Gaps and Gap-fill presets with filters.
+- **Alerts**: price and RSI rules checked every minute, delivered via Telegram (needs TELEGRAM_BOT_TOKEN/chat id).

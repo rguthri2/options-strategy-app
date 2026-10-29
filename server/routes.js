@@ -25,6 +25,8 @@ import { runBacktest, STRATEGIES } from '../shared/backtest.js';
 import { runOptionBacktest, OPTION_STRATEGIES, FILTERS } from '../shared/optbacktest.js';
 import { portfolioRisk } from './risk.js';
 import { earningsScan } from './earningsScan.js';
+import { taVerdict, screenRow } from '../shared/ta.js';
+import { listAlerts, addAlert, deleteAlert, alertKinds } from './alerts.js';
 
 const SYM = /^[A-Z$][A-Z0-9.$/]{0,9}$/;
 const sym = s => {
@@ -69,6 +71,29 @@ export function apiRouter() {
     const [quote, tech] = await Promise.all([market.quote(s), symbolTechnicals(s).catch(() => null)]);
     return { quote, tech };
   }));
+
+  r.get('/ta/:symbol', wrap(async req => {
+    const s = sym(req.params.symbol);
+    const bars = await market.daily(s);
+    const v = taVerdict(bars);
+    if (!v) throw Object.assign(new Error('Not enough history for analysis'), { status: 404 });
+    return { symbol: s, ...v };
+  }));
+
+  // Finviz-style screener over the scan universe; rows cached for 5 minutes.
+  let screenCache = { at: 0, rows: [] };
+  r.get('/screen', wrap(async () => {
+    if (Date.now() - screenCache.at > 300000) {
+      const map = await market.dailyBulk(scanSymbols());
+      const rows = Object.entries(map).map(([s, b]) => { try { return screenRow(s, b); } catch { return null; } }).filter(Boolean);
+      screenCache = { at: Date.now(), rows };
+    }
+    return { updated: screenCache.at, rows: screenCache.rows };
+  }));
+
+  r.get('/alerts', wrap(() => ({ kinds: alertKinds, alerts: listAlerts() })));
+  r.post('/alerts', wrap(req => addAlert(req.body)));
+  r.delete('/alerts/:id', wrap(req => deleteAlert(String(req.params.id))));
 
   r.get('/expirations/:symbol', wrap(req => market.expirations(sym(req.params.symbol))));
 

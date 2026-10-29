@@ -14,6 +14,7 @@ import { activeProvider } from './providers/index.js';
 import { buildAutoUniverse, scanSymbols } from './universeAuto.js';
 import { updateAllBars, storedBars } from './bars.js';
 import { startDailySchedule } from './daily.js';
+import { checkAlerts } from './alerts.js';
 import { refreshFundamentals } from './fundamentals.js';
 import { requestLogos } from './logos.js';
 import { notifySetups, notifyPositions, telegramStatus, sendOnce } from './notify.js';
@@ -169,3 +170,4 @@ function schedule() {
     .then(p => (p?.total ? refreshHotlist() : null)).catch(() => {});
 })();
 startDailySchedule();
+setInterval(() => checkAlerts().catch(e => console.error('[alerts]', e.message)), 60000);
