@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · RG Options Trader</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="login-body">
+  <form id="login" class="login-card">
+    <svg viewBox="0 0 32 32" width="44" height="44" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M6 22l6-7 5 4 9-11" stroke="var(--accent-ink)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>RG Options Trader</h1>
+    <p class="muted">Private workspace. Sign in to continue.</p>
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" required autofocus>
+    <button class="btn primary" type="submit">Sign in</button>
+    <p id="err" class="err" hidden></p>
+  </form>
+  <script src="js/login.js"></script>
+</body>
+</html>

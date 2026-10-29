@@ -1,0 +1,22 @@
+{
+  "name": "rg-options-trader",
+  "version": "1.0.0",
+  "description": "Options trading analytics: swing hot list, option chains with Greeks, strategy scanner and builder (Schwab market data).",
+  "type": "module",
+  "main": "server/index.js",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "set-password": "node server/tools/set-password.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "express": "^4.21.2",
+    "lightweight-charts": "^5.0.0"
+  }
+}
