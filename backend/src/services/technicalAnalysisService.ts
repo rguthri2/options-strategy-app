@@ -161,6 +161,7 @@ class TechnicalAnalysisService {
       }
 
       const closes = prices.map((p) => Number(p.close));
+      const opens = prices.map((p) => Number(p.open));
       const highs = prices.map((p) => Number(p.high));
       const lows = prices.map((p) => Number(p.low));
       const volumes = prices.map((p) => p.volume);
